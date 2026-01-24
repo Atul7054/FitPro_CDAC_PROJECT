@@ -18,38 +18,46 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            // 1. Call Login Endpoint
             const response = await api.post('/auth/login', { email, password });
-            const responseString = response.data; // "LOGIN SUCCESS! Role: ADMIN"
+            
+            // NEW LOGIC: Read the JSON response
+            const { token, role } = response.data;
 
-            if (responseString.includes('LOGIN SUCCESS')) {
-                // Parse Role
-                const role = responseString.split('Role: ')[1];
-                
+            if (token) {
+                // 1. Save Token to LocalStorage
+                localStorage.setItem('fitpro_token', token);
+
                 const userData = { email, role, id: null };
 
-                // 2. Fetch User ID based on Role (Workaround for backend structure)
+                // 2. If Member, fetch their ID
                 if (role === 'MEMBER') {
-                    const membersRes = await api.get('/members');
-                    const myProfile = membersRes.data.find(m => m.user?.email === email);
-                    if (myProfile) userData.id = myProfile.id;
-                } 
-                // Note: Admin doesn't need an ID for most operations
-                
+                    try {
+                        // Note: This API call now works because axios.js adds the token!
+                        const membersRes = await api.get('/members');
+                        const myProfile = membersRes.data.find(m => m.user?.email === email);
+                        if (myProfile) userData.id = myProfile.id;
+                    } catch (err) {
+                        console.error("Could not fetch member ID", err);
+                    }
+                }
+
+                // 3. Update State
                 setUser(userData);
                 localStorage.setItem('fitpro_user', JSON.stringify(userData));
                 return { success: true };
             } else {
-                return { success: false, message: 'Invalid Credentials' };
+                return { success: false, message: 'Invalid Response from Server' };
             }
         } catch (error) {
-            return { success: false, message: 'Login failed. Check server.' };
+            console.error("Login Error:", error);
+            return { success: false, message: 'Invalid Credentials or Server Error' };
         }
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('fitpro_user');
+        localStorage.removeItem('fitpro_token'); // Clear token on logout
     };
 
     return (

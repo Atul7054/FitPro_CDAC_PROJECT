@@ -9,13 +9,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/attendance")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Allows Frontend to access this
 public class AttendanceController {
 
     @Autowired
     private AttendanceService attendanceService;
 
-    // 1. MARK ATTENDANCE (Admin/Trainer)
+    // 1. MARK ATTENDANCE (Admin)
     // URL: POST http://localhost:8080/api/attendance?memberId=1&status=Present
     @PostMapping
     public Attendance markAttendance(@RequestParam Long memberId,
@@ -23,9 +23,9 @@ public class AttendanceController {
         return attendanceService.markAttendance(memberId, status);
     }
 
-    // 2. VIEW HISTORY
-    // URL: GET http://localhost:8080/api/attendance/1
-    @GetMapping("/{memberId}")
+    // 2. VIEW HISTORY (Member)
+    // FIX: Changed path from "/{memberId}" to "/member/{memberId}" to match Frontend
+    @GetMapping("/member/{memberId}")
     public List<Attendance> getHistory(@PathVariable Long memberId) {
         return attendanceService.getAttendanceHistory(memberId);
     }
