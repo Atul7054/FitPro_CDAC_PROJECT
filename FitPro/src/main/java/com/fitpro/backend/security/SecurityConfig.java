@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService; // <--- IMPORT INTERFACE
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,7 +29,7 @@ public class SecurityConfig {
     private JwtRequestFilter jwtRequestFilter;
 
     @Autowired
-    private UserDetailsService userDetailsService; // <--- CHANGE "Impl" to "Service"
+    private UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,13 +41,31 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Public Endpoints
                         .requestMatchers("/api/auth/**", "/api/public/**", "/api/members/register").permitAll()
+
+                        // Admin General
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+
+                        // --- TRAINER RULES ---
                         .requestMatchers(HttpMethod.GET, "/api/trainers/**").hasAnyAuthority("ADMIN", "TRAINER")
                         .requestMatchers(HttpMethod.PUT, "/api/trainers/**").hasAuthority("TRAINER")
+
+                        // 👇 THIS WAS MISSING! 👇
+                        // Allow Admin to ADD (POST) new Trainers
+                        .requestMatchers(HttpMethod.POST, "/api/trainers/**").hasAuthority("ADMIN")
+                        // 👆 THIS WAS MISSING! 👆
+
+                        // Member General
                         .requestMatchers("/api/members/**").hasAnyAuthority("ADMIN", "MEMBER")
-                        .requestMatchers(HttpMethod.POST, "/api/payments/**", "/api/attendance/**").hasAuthority("ADMIN")
+
+                        // Payment & Attendance Rules
+                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasAnyAuthority("ADMIN", "MEMBER")
+                        .requestMatchers(HttpMethod.POST, "/api/attendance/**").hasAuthority("ADMIN")
+
+                        // View History
                         .requestMatchers(HttpMethod.GET, "/api/payments/**", "/api/attendance/**").hasAnyAuthority("ADMIN", "MEMBER")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -64,7 +82,6 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        // Now that pom.xml is fixed, this EMPTY constructor will work again
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
@@ -79,17 +96,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Allow your frontend URL
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-
-        // Allow standard HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Allow headers (needed for JWT tokens)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-
-        // Allow credentials (cookies/tokens)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

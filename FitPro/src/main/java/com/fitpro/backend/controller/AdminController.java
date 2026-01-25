@@ -1,6 +1,6 @@
 package com.fitpro.backend.controller;
 
-import com.fitpro.backend.dto.MemberRegistrationRequest; // Import this!
+import com.fitpro.backend.dto.MemberRegistrationRequest;
 import com.fitpro.backend.entity.Member;
 import com.fitpro.backend.entity.MembershipPlan;
 import com.fitpro.backend.entity.Trainer;
@@ -15,20 +15,20 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AdminController {
 
     @Autowired
     private AdminService adminService;
 
-    // --- ADD THESE TWO SERVICES ---
     @Autowired
     private MemberService memberService;
+
     @Autowired
     private TrainerService trainerService;
 
     // =======================================================
-    // 1. DASHBOARD & PLANS (The Code you already had)
+    // 1. DASHBOARD & PLANS
     // =======================================================
 
     @GetMapping("/stats")
@@ -53,7 +53,7 @@ public class AdminController {
     }
 
     // =======================================================
-    // 2. MEMBER MANAGEMENT (Supreme Powers)
+    // 2. MEMBER MANAGEMENT
     // =======================================================
 
     // Admin sees ALL members
@@ -68,21 +68,15 @@ public class AdminController {
         return memberService.registerMember(request);
     }
 
-    // Admin Updates Member (Fixing mistakes)
-    @PutMapping("/members/{id}")
-    public Member updateMember(@PathVariable Long id, @RequestBody Member member) {
-        return memberService.updateMember(id, member);
-    }
-
-    // Admin Bans Member
+    // Admin Bans/Deletes Member (Now calls the Safe Delete)
     @DeleteMapping("/members/{id}")
     public String deleteMember(@PathVariable Long id) {
         memberService.deleteMember(id);
-        return "Member deleted by Admin.";
+        return "Member deleted successfully";
     }
 
     // =======================================================
-    // 3. TRAINER MANAGEMENT (Hiring & Firing)
+    // 3. TRAINER MANAGEMENT
     // =======================================================
 
     // Admin sees ALL trainers
@@ -92,9 +86,10 @@ public class AdminController {
     }
 
     // Admin Hires a Trainer
+    // 👇 FIXED: Accepts Map to handle Password + Profile creation
     @PostMapping("/trainers")
-    public Trainer createTrainer(@RequestBody Trainer trainer) {
-        return trainerService.createTrainer(trainer);
+    public Trainer createTrainer(@RequestBody Map<String, Object> trainerData) {
+        return trainerService.createTrainer(trainerData);
     }
 
     // Admin Updates Trainer Info
@@ -107,6 +102,6 @@ public class AdminController {
     @DeleteMapping("/trainers/{id}")
     public String deleteTrainer(@PathVariable Long id) {
         trainerService.deleteTrainer(id);
-        return "Trainer fired (students unassigned).";
+        return "Trainer deleted";
     }
 }
