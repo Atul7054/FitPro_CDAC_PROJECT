@@ -2,17 +2,13 @@ package com.fitpro.backend.service;
 
 import com.fitpro.backend.dto.MemberRegistrationRequest;
 import com.fitpro.backend.entity.*;
-import com.fitpro.backend.repository.AppUserRepository;
-import com.fitpro.backend.repository.MemberRepository;
-import com.fitpro.backend.repository.MembershipPlanRepository;
-import com.fitpro.backend.repository.TrainerRepository;
+import com.fitpro.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -31,11 +27,17 @@ public class MemberService {
     @Autowired
     private TrainerRepository trainerRepo;
 
-    @Transactional // Good practice! Keep this.
+    // 👇 ADDED THESE REPOSITORIES FOR DELETION LOGIC 👇
+    @Autowired
+    private PaymentRepository paymentRepo;
+
+    @Autowired
+    private AttendanceRepository attendanceRepo;
+
+    @Transactional
     public Member registerMember(MemberRegistrationRequest request) {
 
-        // --- 1. NEW FIX: Prevent Duplicate Emails ---
-        // This stops the application from crashing with a 500 SQL Error
+        // 1. Prevent Duplicate Emails
         if (userRepo.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered!");
         }
@@ -60,13 +62,7 @@ public class MemberService {
         member.setUser(user);
         member.setMembershipPlan(plan);
 
-        // 5. Date Management -> CORRECT!
-        // You have commented these out. This is EXACTLY what we want.
-        // Dates will remain NULL until they pay.
-        // member.setStartDate(LocalDate.now());
-        // member.setEndDate(LocalDate.now().plusDays(plan.getDurationInDays()));
-
-        // 6. Link Trainer
+        // 5. Link Trainer
         if (request.getTrainerId() != null) {
             Trainer trainer = trainerRepo.findById(request.getTrainerId())
                     .orElseThrow(() -> new RuntimeException("Trainer not found"));
@@ -87,41 +83,46 @@ public class MemberService {
                 .orElseThrow(() -> new RuntimeException("Member not found with ID: " + id));
     }
 
-    // 3. DELETE
+    // 3. SAFE DELETE (The Fix!)
+    @Transactional
     public void deleteMember(Long id) {
-        if (!memberRepo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found with ID: " + id);
+        Member member = memberRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found with ID: " + id));
+
+        // Step A: Delete Payments first (Clears constraints)
+        List<Payment> payments = paymentRepo.findByMemberId(id);
+        paymentRepo.deleteAll(payments);
+
+        // Step B: Delete Attendance first (Clears constraints)
+        List<Attendance> attendance = attendanceRepo.findByMemberId(id);
+        attendanceRepo.deleteAll(attendance);
+
+        // Step C: Delete the Member Profile
+        memberRepo.delete(member);
+
+        // Step D: Delete the User Login Account
+        if (member.getUser() != null) {
+            userRepo.delete(member.getUser());
         }
-        memberRepo.deleteById(id);
     }
 
-    // 4. UPDATE (PUT - Replaces everything)
+    // 4. UPDATE (PUT)
     public Member updateMember(Long id, Member memberDetails) {
         Member member = getMemberById(id);
-
         member.setName(memberDetails.getName());
         member.setPhone(memberDetails.getPhone());
         member.setAddress(memberDetails.getAddress());
-        // Note: We usually don't update Plan/Trainer here, but we can
-
         return memberRepo.save(member);
     }
 
-    // 5. PATCH (Partial Update - e.g., just phone number)
+    // 5. PATCH (Partial Update)
     public Member patchMember(Long id, Map<String, Object> updates) {
         Member member = getMemberById(id);
-
         updates.forEach((key, value) -> {
             switch (key) {
-                case "phone":
-                    member.setPhone((String) value);
-                    break;
-                case "address":
-                    member.setAddress((String) value);
-                    break;
-                case "name":
-                    member.setName((String) value);
-                    break;
+                case "phone": member.setPhone((String) value); break;
+                case "address": member.setAddress((String) value); break;
+                case "name": member.setName((String) value); break;
             }
         });
         return memberRepo.save(member);

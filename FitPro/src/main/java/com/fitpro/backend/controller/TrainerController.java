@@ -10,36 +10,41 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/trainers")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class TrainerController {
 
     @Autowired
     private TrainerService trainerService;
 
-    // 1. GET ALL (Trainers can see other trainers)
+    // 1. GET ALL
     @GetMapping
     public List<Trainer> getAllTrainers() {
         return trainerService.getAllTrainers();
     }
 
-    // 2. GET BY ID (View Profile)
+    // 2. GET BY ID
     @GetMapping("/{id}")
     public Trainer getTrainerById(@PathVariable Long id) {
         return trainerService.getTrainerById(id);
     }
 
-    // 3. UPDATE SELF (PUT) - Trainer updates their own bio/skills
+    // 3. UPDATE SELF
     @PutMapping("/{id}")
     public Trainer updateTrainer(@PathVariable Long id, @RequestBody Trainer trainer) {
         return trainerService.updateTrainer(id, trainer);
     }
 
-    // 4. PATCH SELF (Partial Update)
+    // 4. PATCH SELF
     @PatchMapping("/{id}")
     public Trainer patchTrainer(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         return trainerService.patchTrainer(id, updates);
     }
 
-    // --- REMOVED: POST (Create) and DELETE (Remove) ---
-    // Trainers cannot hire or fire. Only Admin can do that.
+    // 👇 RESTORED THIS METHOD FOR ADMIN 👇
+    // 5. POST (Create New Trainer)
+    @PostMapping
+    public Trainer createTrainer(@RequestBody Map<String, Object> trainerData) {
+        // We accept a Map so we can get email/password (User) AND specialization (Trainer)
+        return trainerService.createTrainer(trainerData);
+    }
 }

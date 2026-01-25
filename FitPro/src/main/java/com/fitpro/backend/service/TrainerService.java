@@ -22,10 +22,10 @@ public class TrainerService {
     private TrainerRepository trainerRepo;
 
     @Autowired
-    private MemberRepository memberRepo; // Needed for the "Safety Delete"
+    private MemberRepository memberRepo;
 
     @Autowired
-    private AppUserRepository userRepo; // <--- Add this!
+    private AppUserRepository userRepo;
 
     // 1. GET ALL
     public List<Trainer> getAllTrainers() {
@@ -38,38 +38,40 @@ public class TrainerService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found with ID: " + id));
     }
 
-    // 3. CREATE (Admin adds a trainer) - *Simplified for now, just saves the profile*
-    public Trainer createTrainer(Trainer trainer) {
-        // 1. Check if phone already exists (Optional but good)
-        // if (trainerRepo.existsByPhone(trainer.getPhone())) ...
+    // 3. CREATE (Admin adds a trainer via Map Data) - THIS IS THE IMPORTANT ONE
+    public Trainer createTrainer(Map<String, Object> data) {
+        String name = (String) data.get("trainerName");
+        String email = (String) data.get("email");
+        String password = (String) data.get("password");
+        String phone = (String) data.get("phone");
+        String specialization = (String) data.get("specialization");
 
-        // 2. Create a Login Account (AppUser) for this Trainer
+        // Step 1: Create the User Account (Login Info)
         AppUser user = new AppUser();
-
-        // Auto-generate email: "JohnCena" -> "johncena@fitpro.com"
-        String email = trainer.getTrainerName().replaceAll("\\s+", "").toLowerCase() + "@fitpro.com";
         user.setEmail(email);
+        user.setPassword(password); // In a real app, you should encrypt this!
+        user.setRole(Role.TRAINER); // Important: Give them Trainer permissions
 
-        // Default Password: "Trainer@123" (They can change it later)
-        user.setPassword("Trainer@123");
-
-        user.setRole(Role.TRAINER); // Set Role
-
-        // 3. Save User First
+        // Save User first so we get an ID
         AppUser savedUser = userRepo.save(user);
 
-        // 4. Link User to Trainer
-        trainer.setUser(savedUser);
+        // Step 2: Create the Trainer Profile
+        Trainer newTrainer = new Trainer();
+        newTrainer.setTrainerName(name);
+        newTrainer.setPhone(phone);
+        newTrainer.setSpecialization(specialization);
 
-        // 5. Save Trainer
-        return trainerRepo.save(trainer);
+        // Step 3: Link them!
+        newTrainer.setUser(savedUser);
+
+        // Step 4: Save Trainer
+        return trainerRepo.save(newTrainer);
     }
 
     // 4. UPDATE (PUT - Full Update)
     public Trainer updateTrainer(Long id, Trainer updatedData) {
         Trainer trainer = getTrainerById(id);
 
-        // Update fields (Matches your DB columns)
         trainer.setTrainerName(updatedData.getTrainerName());
         trainer.setPhone(updatedData.getPhone());
         trainer.setSpecialization(updatedData.getSpecialization());
@@ -77,7 +79,7 @@ public class TrainerService {
         return trainerRepo.save(trainer);
     }
 
-    // 5. PATCH (Partial Update - e.g., just changing phone)
+    // 5. PATCH (Partial Update)
     public Trainer patchTrainer(Long id, Map<String, Object> updates) {
         Trainer trainer = getTrainerById(id);
 
@@ -95,12 +97,12 @@ public class TrainerService {
     public void deleteTrainer(Long id) {
         Trainer trainer = getTrainerById(id);
 
-        // CRITICAL: Before deleting the trainer, free the members!
+        // Unassign members before deleting
         List<Member> assignedMembers = trainer.getMembers();
         if (assignedMembers != null) {
             for (Member m : assignedMembers) {
-                m.setTrainer(null); // Unassign the trainer
-                memberRepo.save(m); // Save the member
+                m.setTrainer(null);
+                memberRepo.save(m);
             }
         }
 
