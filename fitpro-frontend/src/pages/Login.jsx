@@ -11,12 +11,19 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const result = await login(creds.email, creds.password);
+        
         if (result.success) {
-            // Role based redirect handled in component logic or context
-            // For now simply:
-             const storedUser = JSON.parse(localStorage.getItem('fitpro_user'));
-             if (storedUser.role === 'ADMIN') navigate('/admin');
-             else navigate('/dashboard');
+            // Retrieve the user we just stored to check their role
+            const storedUser = JSON.parse(localStorage.getItem('fitpro_user'));
+            
+            // 👇 UPDATED REDIRECT LOGIC 👇
+            if (storedUser.role === 'ADMIN') {
+                navigate('/admin');
+            } else if (storedUser.role === 'TRAINER') {
+                navigate('/trainer'); // Send Trainers to their specific page
+            } else {
+                navigate('/dashboard'); // Members go here
+            }
         } else {
             alert(result.message);
         }

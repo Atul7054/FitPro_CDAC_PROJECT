@@ -50,11 +50,8 @@ public class SecurityConfig {
                         // --- TRAINER RULES ---
                         .requestMatchers(HttpMethod.GET, "/api/trainers/**").hasAnyAuthority("ADMIN", "TRAINER")
                         .requestMatchers(HttpMethod.PUT, "/api/trainers/**").hasAuthority("TRAINER")
-
-                        // 👇 THIS WAS MISSING! 👇
-                        // Allow Admin to ADD (POST) new Trainers
+                        .requestMatchers(HttpMethod.PATCH, "/api/trainers/**").hasAuthority("TRAINER") // Allow PATCH for Trainers
                         .requestMatchers(HttpMethod.POST, "/api/trainers/**").hasAuthority("ADMIN")
-                        // 👆 THIS WAS MISSING! 👆
 
                         // Member General
                         .requestMatchers("/api/members/**").hasAnyAuthority("ADMIN", "MEMBER")
@@ -97,7 +94,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // 👇 ADDED "PATCH" HERE 👇
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 

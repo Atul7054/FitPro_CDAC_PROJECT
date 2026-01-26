@@ -27,18 +27,15 @@ public class TrainerService {
     @Autowired
     private AppUserRepository userRepo;
 
-    // 1. GET ALL
     public List<Trainer> getAllTrainers() {
         return trainerRepo.findAll();
     }
 
-    // 2. GET ONE
     public Trainer getTrainerById(Long id) {
         return trainerRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
     }
 
-    // 3. CREATE (Admin adds a trainer via Map Data) - THIS IS THE IMPORTANT ONE
     public Trainer createTrainer(Map<String, Object> data) {
         String name = (String) data.get("trainerName");
         String email = (String) data.get("email");
@@ -46,29 +43,22 @@ public class TrainerService {
         String phone = (String) data.get("phone");
         String specialization = (String) data.get("specialization");
 
-        // Step 1: Create the User Account (Login Info)
         AppUser user = new AppUser();
         user.setEmail(email);
-        user.setPassword(password); // In a real app, you should encrypt this!
-        user.setRole(Role.TRAINER); // Important: Give them Trainer permissions
-
-        // Save User first so we get an ID
+        user.setPassword(password);
+        user.setRole(Role.TRAINER);
         AppUser savedUser = userRepo.save(user);
 
-        // Step 2: Create the Trainer Profile
         Trainer newTrainer = new Trainer();
         newTrainer.setTrainerName(name);
         newTrainer.setPhone(phone);
         newTrainer.setSpecialization(specialization);
-
-        // Step 3: Link them!
         newTrainer.setUser(savedUser);
 
-        // Step 4: Save Trainer
         return trainerRepo.save(newTrainer);
     }
 
-    // 4. UPDATE (PUT - Full Update)
+    // 4. UPDATE (PUT - Full Update by Admin)
     public Trainer updateTrainer(Long id, Trainer updatedData) {
         Trainer trainer = getTrainerById(id);
 
@@ -76,28 +66,44 @@ public class TrainerService {
         trainer.setPhone(updatedData.getPhone());
         trainer.setSpecialization(updatedData.getSpecialization());
 
+        // 👇 NEW: Handle Email Update for Admin
+        if (updatedData.getUser() != null && updatedData.getUser().getEmail() != null) {
+            trainer.getUser().setEmail(updatedData.getUser().getEmail());
+            userRepo.save(trainer.getUser());
+        }
+
         return trainerRepo.save(trainer);
     }
 
-    // 5. PATCH (Partial Update)
+    // 👇 UPDATED PATCH METHOD: Supports Email Update 👇
     public Trainer patchTrainer(Long id, Map<String, Object> updates) {
         Trainer trainer = getTrainerById(id);
 
         updates.forEach((key, value) -> {
             switch (key) {
-                case "trainerName": trainer.setTrainerName((String) value); break;
-                case "phone": trainer.setPhone((String) value); break;
-                case "specialization": trainer.setSpecialization((String) value); break;
+                case "trainerName":
+                    trainer.setTrainerName((String) value);
+                    break;
+                case "phone":
+                    trainer.setPhone((String) value);
+                    break;
+                case "specialization":
+                    trainer.setSpecialization((String) value);
+                    break;
+                // 👇 HANDLE EMAIL UPDATE
+                case "email":
+                    if (trainer.getUser() != null) {
+                        trainer.getUser().setEmail((String) value);
+                        userRepo.save(trainer.getUser());
+                    }
+                    break;
             }
         });
         return trainerRepo.save(trainer);
     }
 
-    // 6. DELETE (The Safety Delete)
     public void deleteTrainer(Long id) {
         Trainer trainer = getTrainerById(id);
-
-        // Unassign members before deleting
         List<Member> assignedMembers = trainer.getMembers();
         if (assignedMembers != null) {
             for (Member m : assignedMembers) {
@@ -105,7 +111,9 @@ public class TrainerService {
                 memberRepo.save(m);
             }
         }
-
+        if (trainer.getUser() != null) {
+            userRepo.delete(trainer.getUser());
+        }
         trainerRepo.delete(trainer);
     }
 }
