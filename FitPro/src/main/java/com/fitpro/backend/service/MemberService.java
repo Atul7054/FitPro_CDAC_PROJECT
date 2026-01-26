@@ -106,12 +106,20 @@ public class MemberService {
         }
     }
 
-    // 4. UPDATE (PUT)
+    // 4. UPDATE (PUT - Admin updates Member)
     public Member updateMember(Long id, Member memberDetails) {
         Member member = getMemberById(id);
+
         member.setName(memberDetails.getName());
         member.setPhone(memberDetails.getPhone());
         member.setAddress(memberDetails.getAddress());
+
+        // 👇 NEW: Handle Email Update for Admin
+        if (memberDetails.getUser() != null && memberDetails.getUser().getEmail() != null) {
+            member.getUser().setEmail(memberDetails.getUser().getEmail());
+            userRepo.save(member.getUser());
+        }
+
         return memberRepo.save(member);
     }
 

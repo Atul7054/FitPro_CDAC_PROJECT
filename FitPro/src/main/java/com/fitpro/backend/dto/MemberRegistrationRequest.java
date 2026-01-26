@@ -1,8 +1,10 @@
 package com.fitpro.backend.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class MemberRegistrationRequest {
 
     //These are for login info

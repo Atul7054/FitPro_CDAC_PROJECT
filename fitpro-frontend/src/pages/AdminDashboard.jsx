@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import { Row, Col, Card, Table, Button, Badge, Modal, Form } from 'react-bootstrap';
-import { Trash2, DollarSign, CheckSquare, Plus, Users, UserCheck, TrendingUp } from 'lucide-react';
+import { Trash2, DollarSign, CheckSquare, Plus, Users, UserCheck, TrendingUp, Edit, Save } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({});
     const [members, setMembers] = useState([]);
     const [trainers, setTrainers] = useState([]);
     
-    // Modal State
+    // Add Modal State
     const [showTrainerModal, setShowTrainerModal] = useState(false);
-    
-    // Form State
+    const [showEditTrainerModal, setShowEditTrainerModal] = useState(false);
+    const [showEditMemberModal, setShowEditMemberModal] = useState(false);
+
+    // Data State
     const [newTrainer, setNewTrainer] = useState({ 
         trainerName: '', email: '', password: '', phone: '', specialization: '' 
     });
+    
+    const [editingTrainer, setEditingTrainer] = useState(null);
+    const [editingMember, setEditingMember] = useState(null);
 
     const fetchAll = () => {
         api.get('/admin/stats').then(res => setStats(res.data)).catch(err => console.error(err));
@@ -24,7 +29,8 @@ const AdminDashboard = () => {
 
     useEffect(() => { fetchAll(); }, []);
 
-    // 1. Payment
+    // --- ACTIONS ---
+
     const handlePayment = async (memberId, amount) => {
         if(confirm(`Confirm CASH payment of ₹${amount}?`)) {
             try {
@@ -35,7 +41,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // 2. Attendance
     const handleCheckIn = async (memberId) => {
         try {
             await api.post(`/attendance?memberId=${memberId}&status=Present`);
@@ -43,7 +48,6 @@ const AdminDashboard = () => {
         } catch (e) { alert("Error checking in"); }
     };
 
-    // 3. Delete Member
     const handleDeleteMember = async (id) => {
         if(confirm("Delete this member?")) {
             try {
@@ -54,7 +58,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // 4. Delete Trainer (NEW FEATURE)
     const handleDeleteTrainer = async (id) => {
         if(confirm("Are you sure you want to fire this trainer?")) {
             try {
@@ -65,7 +68,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // 5. Add Trainer
     const handleAddTrainer = async () => {
         try {
             await api.post('/trainers', newTrainer);
@@ -76,6 +78,61 @@ const AdminDashboard = () => {
         } catch (e) { 
             alert("Error adding trainer: " + (e.response?.status === 403 ? "Access Denied" : e.message)); 
         }
+    };
+
+    // --- EDIT LOGIC ---
+
+    const openEditTrainer = (trainer) => {
+        setEditingTrainer({
+            id: trainer.id,
+            trainerName: trainer.trainerName,
+            phone: trainer.phone,
+            specialization: trainer.specialization,
+            email: trainer.user?.email || ''
+        });
+        setShowEditTrainerModal(true);
+    };
+
+    const handleUpdateTrainer = async () => {
+        try {
+            // Nest email inside 'user' object for the backend
+            const payload = {
+                trainerName: editingTrainer.trainerName,
+                phone: editingTrainer.phone,
+                specialization: editingTrainer.specialization,
+                user: { email: editingTrainer.email }
+            };
+            await api.put(`/admin/trainers/${editingTrainer.id}`, payload);
+            alert("Trainer Updated!");
+            setShowEditTrainerModal(false);
+            fetchAll();
+        } catch (e) { alert("Update failed"); }
+    };
+
+    const openEditMember = (member) => {
+        setEditingMember({
+            id: member.id,
+            name: member.name,
+            phone: member.phone,
+            address: member.address,
+            email: member.user?.email || ''
+        });
+        setShowEditMemberModal(true);
+    };
+
+    const handleUpdateMember = async () => {
+        try {
+            const payload = {
+                name: editingMember.name,
+                phone: editingMember.phone,
+                address: editingMember.address,
+                user: { email: editingMember.email }
+            };
+            await api.put(`/admin/members/${editingMember.id}`, payload);
+            alert("Member Updated!");
+            setShowEditMemberModal(false);
+            fetchAll();
+        } catch (e) { alert("Update failed"); }
     };
 
     return (
@@ -138,6 +195,7 @@ const AdminDashboard = () => {
                                 <td><Badge bg={m.endDate ? "success" : "danger"} className="bg-opacity-25 text-white">{m.endDate ? 'Active' : 'Pending'}</Badge></td>
                                 <td>
                                     <div className="d-flex gap-2">
+                                        <Button size="sm" variant="outline-info" onClick={() => openEditMember(m)}><Edit size={16} /></Button>
                                         <Button size="sm" variant="outline-success" onClick={() => handlePayment(m.id, m.membershipPlan?.price)}><DollarSign size={16} /></Button>
                                         <Button size="sm" variant="outline-primary" onClick={() => handleCheckIn(m.id)}><CheckSquare size={16} /></Button>
                                         <Button size="sm" variant="outline-danger" onClick={() => handleDeleteMember(m.id)}><Trash2 size={16} /></Button>
@@ -149,7 +207,7 @@ const AdminDashboard = () => {
                 </Table>
             </Card>
 
-            {/* Trainer Table - NOW WITH DELETE BUTTON */}
+            {/* Trainer Table */}
             <Card>
                 <Card.Header className="bg-transparent text-white fw-bold py-3 border-secondary">Trainer Staff</Card.Header>
                 <Table hover responsive className="mb-0 align-middle">
@@ -168,9 +226,10 @@ const AdminDashboard = () => {
                                 <td><Badge bg="info" className="bg-opacity-25 text-info">{t.specialization}</Badge></td>
                                 <td className="text-secondary">{t.phone}</td>
                                 <td className="text-end pe-4">
-                                    <Button size="sm" variant="outline-danger" onClick={() => handleDeleteTrainer(t.id)}>
-                                        <Trash2 size={16} />
-                                    </Button>
+                                    <div className="d-flex justify-content-end gap-2">
+                                        <Button size="sm" variant="outline-info" onClick={() => openEditTrainer(t)}><Edit size={16} /></Button>
+                                        <Button size="sm" variant="outline-danger" onClick={() => handleDeleteTrainer(t.id)}><Trash2 size={16} /></Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -178,7 +237,7 @@ const AdminDashboard = () => {
                 </Table>
             </Card>
 
-            {/* Add Trainer Modal */}
+            {/* MODAL 1: Add Trainer */}
             <Modal show={showTrainerModal} onHide={() => setShowTrainerModal(false)} centered>
                 <Modal.Header closeButton className="bg-dark border-secondary">
                     <Modal.Title className="text-white">Add New Trainer</Modal.Title>
@@ -188,38 +247,107 @@ const AdminDashboard = () => {
                         <Form.Group className="mb-3">
                             <Form.Label>Name</Form.Label>
                             <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
-                                value={newTrainer.trainerName}
-                                onChange={e => setNewTrainer({...newTrainer, trainerName: e.target.value})} />
+                                value={newTrainer.trainerName} onChange={e => setNewTrainer({...newTrainer, trainerName: e.target.value})} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Email</Form.Label>
                             <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
-                                value={newTrainer.email}
-                                onChange={e => setNewTrainer({...newTrainer, email: e.target.value})} />
+                                value={newTrainer.email} onChange={e => setNewTrainer({...newTrainer, email: e.target.value})} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Password</Form.Label>
                             <Form.Control type="password" className="bg-secondary bg-opacity-10 border-secondary text-white"
-                                value={newTrainer.password}
-                                onChange={e => setNewTrainer({...newTrainer, password: e.target.value})} />
+                                value={newTrainer.password} onChange={e => setNewTrainer({...newTrainer, password: e.target.value})} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Phone</Form.Label>
                             <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
-                                value={newTrainer.phone}
-                                onChange={e => setNewTrainer({...newTrainer, phone: e.target.value})} />
+                                value={newTrainer.phone} onChange={e => setNewTrainer({...newTrainer, phone: e.target.value})} />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Specialization</Form.Label>
                             <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
-                                value={newTrainer.specialization}
-                                onChange={e => setNewTrainer({...newTrainer, specialization: e.target.value})} />
+                                value={newTrainer.specialization} onChange={e => setNewTrainer({...newTrainer, specialization: e.target.value})} />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer className="bg-dark border-secondary">
                     <Button variant="secondary" onClick={() => setShowTrainerModal(false)}>Cancel</Button>
                     <Button variant="gold" onClick={handleAddTrainer}>Save Trainer</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* MODAL 2: Edit Trainer */}
+            <Modal show={showEditTrainerModal} onHide={() => setShowEditTrainerModal(false)} centered>
+                <Modal.Header closeButton className="bg-dark border-secondary">
+                    <Modal.Title className="text-white">Edit Trainer</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="bg-dark text-white">
+                    {editingTrainer && (
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Name</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingTrainer.trainerName} onChange={e => setEditingTrainer({...editingTrainer, trainerName: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Email</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingTrainer.email} onChange={e => setEditingTrainer({...editingTrainer, email: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Phone</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingTrainer.phone} onChange={e => setEditingTrainer({...editingTrainer, phone: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Specialization</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingTrainer.specialization} onChange={e => setEditingTrainer({...editingTrainer, specialization: e.target.value})} />
+                            </Form.Group>
+                        </Form>
+                    )}
+                </Modal.Body>
+                <Modal.Footer className="bg-dark border-secondary">
+                    <Button variant="secondary" onClick={() => setShowEditTrainerModal(false)}>Cancel</Button>
+                    <Button variant="gold" onClick={handleUpdateTrainer}><Save size={18} className="me-2"/> Update</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* MODAL 3: Edit Member */}
+            <Modal show={showEditMemberModal} onHide={() => setShowEditMemberModal(false)} centered>
+                <Modal.Header closeButton className="bg-dark border-secondary">
+                    <Modal.Title className="text-white">Edit Member</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="bg-dark text-white">
+                    {editingMember && (
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Name</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Email</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Phone</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingMember.phone} onChange={e => setEditingMember({...editingMember, phone: e.target.value})} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Address</Form.Label>
+                                <Form.Control className="bg-secondary bg-opacity-10 border-secondary text-white"
+                                    value={editingMember.address} onChange={e => setEditingMember({...editingMember, address: e.target.value})} />
+                            </Form.Group>
+                        </Form>
+                    )}
+                </Modal.Body>
+                <Modal.Footer className="bg-dark border-secondary">
+                    <Button variant="secondary" onClick={() => setShowEditMemberModal(false)}>Cancel</Button>
+                    <Button variant="gold" onClick={handleUpdateMember}><Save size={18} className="me-2"/> Update</Button>
                 </Modal.Footer>
             </Modal>
         </div>

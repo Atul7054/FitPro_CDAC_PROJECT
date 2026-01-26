@@ -1,7 +1,7 @@
 import { Navbar as BsNavbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Dumbbell, LogOut, User } from 'lucide-react';
+import { Dumbbell, LogOut, User, Settings as SettingsIcon } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -30,10 +30,27 @@ const Navbar = () => {
                             </>
                         ) : (
                             <>
-                                <span className="text-secondary small d-none d-lg-block">Hello, {user.email}</span>
-                                <Nav.Link as={Link} to={user.role === 'ADMIN' ? '/admin' : '/dashboard'} className="text-light d-flex align-items-center gap-1">
+                                {/* SMART DASHBOARD LINK */}
+                                <Nav.Link 
+                                    as={Link} 
+                                    to={
+                                        user.role === 'ADMIN' ? '/admin' : 
+                                        user.role === 'TRAINER' ? '/trainer' : 
+                                        '/dashboard'
+                                    } 
+                                    className="text-light d-flex align-items-center gap-1"
+                                >
                                     <User size={18} /> Dashboard
                                 </Nav.Link>
+
+                                {/* 👇 NEW SETTINGS LINK (Visible to Members & Trainers only) 👇 */}
+                                {user.role !== 'ADMIN' && (
+                                    <Nav.Link as={Link} to="/settings" className="text-light d-flex align-items-center gap-1">
+                                        <SettingsIcon size={18} /> Settings
+                                    </Nav.Link>
+                                )}
+                                {/* 👆 END NEW LINK 👆 */}
+
                                 <Button variant="outline-danger" size="sm" onClick={handleLogout} className="d-flex align-items-center gap-1">
                                     <LogOut size={16} /> Logout
                                 </Button>
