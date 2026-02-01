@@ -6,8 +6,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import MemberDashboard from './pages/MemberDashboard';
 import AdminDashboard from './pages/AdminDashboard';
-import TrainerDashboard from './pages/TrainerDashboard'; // 1. IMPORT THIS
+import TrainerDashboard from './pages/TrainerDashboard'; 
 import Settings from './pages/Settings';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, role }) => {
@@ -30,6 +32,9 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         
                         {/* MEMBER DASHBOARD */}
                         <Route path="/dashboard" element={
