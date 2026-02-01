@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // 👈 Added Link here
 import { Form, Button, Card, Container } from 'react-bootstrap';
-import { Eye, EyeOff } from 'lucide-react'; // 👈 Import Icons
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [creds, setCreds] = useState({ email: '', password: '' });
     
-    // 👇 State for toggling password visibility
+    // State for toggling password visibility
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -50,14 +50,14 @@ const Login = () => {
                             />
                         </Form.Group>
 
-                        {/* 👇 Updated Password Group with Eye Button */}
-                        <Form.Group className="mb-4 position-relative">
+                        {/* Password Group */}
+                        <Form.Group className="mb-2 position-relative"> {/* Changed mb-4 to mb-2 for spacing */}
                             <Form.Control 
-                                type={showPassword ? "text" : "password"} // 👈 Dynamic Type
+                                type={showPassword ? "text" : "password"}
                                 placeholder="Password" 
                                 required 
                                 className="bg-dark text-white border-secondary"
-                                style={{ paddingRight: '45px' }} // Make room for the icon
+                                style={{ paddingRight: '45px' }}
                                 value={creds.password}
                                 onChange={e => setCreds({...creds, password: e.target.value})} 
                             />
@@ -72,6 +72,17 @@ const Login = () => {
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </Form.Group>
+
+                        {/* 👇 ADDED FORGOT PASSWORD LINK HERE */}
+                        <div className="d-flex justify-content-end mb-4">
+                            <Link 
+                                to="/forgot-password" 
+                                className="text-decoration-none small"
+                                style={{ color: '#ffc107' }} // Gold color
+                            >
+                                Forgot Password?
+                            </Link>
+                        </div>
 
                         <Button variant="gold" type="submit" className="w-100 py-2 fw-bold">Login</Button>
                     </Form>

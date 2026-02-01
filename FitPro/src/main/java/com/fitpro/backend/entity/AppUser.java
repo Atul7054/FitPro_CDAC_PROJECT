@@ -4,6 +4,8 @@ package com.fitpro.backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data //to generate getters and setters automatically
 public class AppUser {
@@ -21,5 +23,8 @@ public class AppUser {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
 
 }

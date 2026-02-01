@@ -30,7 +30,7 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-
+    // Existing Login
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try {
@@ -44,7 +44,6 @@ public class AuthController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
         final String jwt = jwtUtil.generateToken(userDetails);
 
-        // Get Role safely
         String role = "MEMBER";
         if (!userDetails.getAuthorities().isEmpty()) {
             role = userDetails.getAuthorities().stream().findFirst().get().getAuthority();
@@ -57,11 +56,35 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // Existing Register
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthenticationRequest request) {
-        // Default role is MEMBER if not specified
         authService.register(request.getEmail(), request.getPassword(), "MEMBER");
         return ResponseEntity.ok("User registered successfully");
+    }
+
+    // 👇 NEW: Forgot Password Endpoint
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        try {
+            authService.generateResetToken(body.get("email"));
+            return ResponseEntity.ok("Reset link sent to console.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 👇 NEW: Reset Password Endpoint
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        try {
+            String token = body.get("token");
+            String newPassword = body.get("newPassword");
+            authService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password reset successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
 
@@ -70,13 +93,11 @@ class AuthenticationRequest {
     private String email;
     private String password;
 
-    // Constructors
     public AuthenticationRequest() {}
     public AuthenticationRequest(String email, String password) {
         this.email = email;
         this.password = password;
     }
-    // Getters & Setters
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPassword() { return password; }
