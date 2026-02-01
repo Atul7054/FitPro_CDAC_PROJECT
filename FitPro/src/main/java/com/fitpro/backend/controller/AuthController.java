@@ -28,9 +28,8 @@ public class AuthController {
     private UserDetailsService userDetailsService;
 
     @Autowired
-    private     AuthService authService;
+    private AuthService authService;
 
-    // ❌ MAKE SURE NO EmailService OR MicroserviceLogger IS HERE ❌
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
