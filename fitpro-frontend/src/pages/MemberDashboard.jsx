@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { Container, Card, Row, Col, Button, Badge, Spinner, Modal } from 'react-bootstrap';
 import { CreditCard, User, Calendar, CheckCircle } from 'lucide-react';
+import BmiCalculator from '../components/BmiCalc'; // 👈 IMPORT THE CALCULATOR
 
 const MemberDashboard = () => {
     const { user } = useAuth();
@@ -59,7 +60,6 @@ const MemberDashboard = () => {
             const amount = member.membershipPlan?.price || 1000;
             const orderRes = await api.post('/payments/create-order', { amount: amount });
             
-            // ✅ FIX: Removed JSON.parse(). Use the data directly.
             const orderData = orderRes.data;
 
             // 2. Open Razorpay Window
@@ -137,6 +137,7 @@ const MemberDashboard = () => {
             `}</style>
 
             <Container className="py-5">
+                {/* Header Section */}
                 <div className="d-flex justify-content-between align-items-center mb-5">
                     <div>
                         <h1 className="fw-bold text-white">Hello, <span className="text-warning">{member.name}</span></h1>
@@ -148,79 +149,93 @@ const MemberDashboard = () => {
                 </div>
 
                 <Row className="g-4">
-                    <Col md={4}>
-                        <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
-                            <Card.Header className="bg-transparent border-secondary py-3">
-                                <h5 className="m-0 d-flex align-items-center gap-2"><CreditCard size={20} className="text-warning"/> Membership</h5>
-                            </Card.Header>
-                            <Card.Body>
-                                <div className="mb-3">
-                                    <small className="text-secondary text-uppercase fw-bold">Plan</small>
-                                    <h3 className="fw-bold text-white">{member.membershipPlan?.planName || "No Plan"}</h3>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-end">
-                                    <div>
-                                        <small className="text-secondary fw-bold">Expires</small>
-                                        <p className={member.endDate ? "text-white m-0" : "text-danger m-0"}>{member.endDate || "Expired"}</p>
-                                    </div>
-                                    {!member.endDate && (
-                                        <Button size="sm" variant="gold" onClick={handlePayment} disabled={processing}>
-                                            {processing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : "Renew Now"}
-                                        </Button>
-                                    )}
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-
-                    <Col md={4}>
-                        <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
-                            <Card.Header className="bg-transparent border-secondary py-3">
-                                <h5 className="m-0 d-flex align-items-center gap-2"><User size={20} className="text-warning"/> Trainer</h5>
-                            </Card.Header>
-                            <Card.Body className="text-center">
-                                {member.trainer ? (
-                                    <>
-                                        <h4>{member.trainer.trainerName}</h4>
-                                        <Badge bg="info" className="bg-opacity-25 text-info">{member.trainer.specialization}</Badge>
-                                        <p className="text-secondary mt-2 small">{member.trainer.phone}</p>
-                                    </>
-                                ) : <p className="text-secondary py-3">No trainer assigned.</p>}
-                            </Card.Body>
-                        </Card>
-                    </Col>
-
-                    <Col md={4}>
-                        <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
-                            <Card.Header className="bg-transparent border-secondary py-3 d-flex justify-content-between">
-                                <h5 className="m-0 d-flex align-items-center gap-2"><Calendar size={20} className="text-warning"/> Attendance</h5>
-                                {isCheckedInToday && <Badge bg="success">Checked In ✅</Badge>}
-                            </Card.Header>
-                            <Card.Body>
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <span className="text-secondary">Total Days Present</span>
-                                    <h2 className="fw-bold text-success m-0">{attendance.length}</h2>
-                                </div>
-                                <hr className="border-secondary opacity-25"/>
-                                <h6 className="text-secondary small fw-bold mb-3">RECENT CHECK-INS</h6>
-                                
-                                {uniqueAttendance.length > 0 ? (
-                                    <div className="custom-scroll" style={{maxHeight: '120px', overflowY: 'auto', paddingRight: '5px'}}>
-                                        {uniqueAttendance.map((att, index) => (
-                                            <div key={index} className="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-10">
-                                                <span className="text-light">{att.date}</span>
-                                                <Badge bg="success" className="bg-opacity-10 text-success border border-success border-opacity-25">Present</Badge>
+                    {/* LEFT SIDE: Stats & Info (8 Columns) */}
+                    <Col md={8}>
+                        <Row className="g-4">
+                            {/* Membership Card */}
+                            <Col md={6}>
+                                <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
+                                    <Card.Header className="bg-transparent border-secondary py-3">
+                                        <h5 className="m-0 d-flex align-items-center gap-2"><CreditCard size={20} className="text-warning"/> Membership</h5>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <div className="mb-3">
+                                            <small className="text-secondary text-uppercase fw-bold">Plan</small>
+                                            <h3 className="fw-bold text-white">{member.membershipPlan?.planName || "No Plan"}</h3>
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-end">
+                                            <div>
+                                                <small className="text-secondary fw-bold">Expires</small>
+                                                <p className={member.endDate ? "text-white m-0" : "text-danger m-0"}>{member.endDate || "Expired"}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-secondary small text-center py-3">No attendance records yet.</p>
-                                )}
-                            </Card.Body>
-                        </Card>
+                                            {!member.endDate && (
+                                                <Button size="sm" variant="gold" onClick={handlePayment} disabled={processing}>
+                                                    {processing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : "Renew Now"}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            {/* Trainer Card */}
+                            <Col md={6}>
+                                <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
+                                    <Card.Header className="bg-transparent border-secondary py-3">
+                                        <h5 className="m-0 d-flex align-items-center gap-2"><User size={20} className="text-warning"/> Trainer</h5>
+                                    </Card.Header>
+                                    <Card.Body className="text-center">
+                                        {member.trainer ? (
+                                            <>
+                                                <h4>{member.trainer.trainerName}</h4>
+                                                <Badge bg="info" className="bg-opacity-25 text-info">{member.trainer.specialization}</Badge>
+                                                <p className="text-secondary mt-2 small">{member.trainer.phone}</p>
+                                            </>
+                                        ) : <p className="text-secondary py-3">No trainer assigned.</p>}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            {/* Attendance Card - Full Width of Left Column */}
+                            <Col md={12}>
+                                <Card className="bg-dark border-secondary text-white h-100 shadow-lg">
+                                    <Card.Header className="bg-transparent border-secondary py-3 d-flex justify-content-between">
+                                        <h5 className="m-0 d-flex align-items-center gap-2"><Calendar size={20} className="text-warning"/> Attendance</h5>
+                                        {isCheckedInToday && <Badge bg="success">Checked In ✅</Badge>}
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <span className="text-secondary">Total Days Present</span>
+                                            <h2 className="fw-bold text-success m-0">{attendance.length}</h2>
+                                        </div>
+                                        <hr className="border-secondary opacity-25"/>
+                                        <h6 className="text-secondary small fw-bold mb-3">RECENT CHECK-INS</h6>
+                                        
+                                        {uniqueAttendance.length > 0 ? (
+                                            <div className="custom-scroll" style={{maxHeight: '120px', overflowY: 'auto', paddingRight: '5px'}}>
+                                                {uniqueAttendance.map((att, index) => (
+                                                    <div key={index} className="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-10">
+                                                        <span className="text-light">{att.date}</span>
+                                                        <Badge bg="success" className="bg-opacity-10 text-success border border-success border-opacity-25">Present</Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-secondary small text-center py-3">No attendance records yet.</p>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+                    </Col>
+
+                    {/* RIGHT SIDE: BMI Calculator (4 Columns) */}
+                    <Col md={4}>
+                        <BmiCalculator /> {/* 👈 THIS IS THE NEW WIDGET */}
                     </Col>
                 </Row>
 
+                {/* Success Modal */}
                 <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
                     <Modal.Body className="bg-light p-5 text-center rounded">
                         <CheckCircle size={80} className="text-success mb-3" />
