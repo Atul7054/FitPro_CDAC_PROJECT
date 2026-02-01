@@ -27,16 +27,18 @@ public class TrainerService {
     @Autowired
     private AppUserRepository userRepo;
 
-    // 1. GET ALL (Active Only)
+    // 1. GET ALL (Active Trainers Only)
     public List<Trainer> getAllTrainers() {
         return trainerRepo.findByActiveTrue();
     }
 
+    // 2. Get Trainer by Id
     public Trainer getTrainerById(Long id) {
         return trainerRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
     }
 
+    //3. Create new Trainer or Add new Trainer
     public Trainer createTrainer(Map<String, Object> data) {
         String name = (String) data.get("trainerName");
         String email = (String) data.get("email");
@@ -75,7 +77,7 @@ public class TrainerService {
         return trainerRepo.save(trainer);
     }
 
-    // PATCH (Partial Update)
+    // 5. PATCH (Partial Update)
     public Trainer patchTrainer(Long id, Map<String, Object> updates) {
         Trainer trainer = getTrainerById(id);
 
@@ -116,7 +118,7 @@ public class TrainerService {
         trainerRepo.save(trainer);
     }
 
-    // 👇 NEW METHOD: Get Clients for the Logged-in Trainer
+    //Get Clients for the Logged-in Trainer
     public List<Member> getMyClients(String email) {
         // 1. Find User by Email (from Login Token)
         AppUser user = userRepo.findByEmail(email)

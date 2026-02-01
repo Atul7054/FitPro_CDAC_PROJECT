@@ -52,7 +52,7 @@ public class AdminController {
         return ResponseEntity.ok("Member deleted successfully");
     }
 
-    // 👇 NEW: Update Member (Fixes the error!)
+    //Update Member
     @PutMapping("/members/{id}")
     public ResponseEntity<Member> updateMember(@PathVariable Long id, @RequestBody Member member) {
         return ResponseEntity.ok(memberService.updateMember(id, member));
