@@ -1,4 +1,4 @@
-FitPro - Gym Management System
+FitPro
 FitPro is a full-stack web application designed to streamline gym operations for administrators, trainers, and members. It features a robust Spring Boot backend and a responsive React frontend, integrating secure authentication, automated membership tracking, and online payment processing.
 
 🚀 Features
@@ -69,12 +69,16 @@ Install dependencies and start the development server:
 Bash
 npm install
 npm run dev
+
+
 🔒 Security Implementation
 The project implements a custom JwtRequestFilter that intercepts every request to validate a Bearer token. Role-Based Access Control (RBAC) is enforced on both the frontend and backend:
 
 Frontend: ProtectedRoute component validates user roles before rendering views.
 
 Backend: SecurityConfig defines authorized paths for ADMIN, TRAINER, and MEMBER.
+
+
 
 🏗️ Project Structure
 src/main/java/com/fitpro/backend/controller: REST API endpoints.
