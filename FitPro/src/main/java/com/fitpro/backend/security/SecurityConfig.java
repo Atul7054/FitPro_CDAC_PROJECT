@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder; // 👈 IMPORTANT
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Keep CORS fix
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/api/public/**", "/api/members/register").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/trainers/**").hasAnyAuthority("ADMIN", "TRAINER")
@@ -52,10 +52,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    //REVERTED TO PLAIN TEXT ENCODER
+    //Using BCrypt for secure password encoding
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
