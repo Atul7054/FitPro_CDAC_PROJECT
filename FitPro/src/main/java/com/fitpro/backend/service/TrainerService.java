@@ -9,6 +9,7 @@ import com.fitpro.backend.repository.MemberRepository;
 import com.fitpro.backend.repository.TrainerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,18 +28,22 @@ public class TrainerService {
     @Autowired
     private AppUserRepository userRepo;
 
-    // 1. GET ALL (Active Trainers Only)
+    //Inject Password Encoder
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    //GET ALL (Active Trainers Only)
     public List<Trainer> getAllTrainers() {
         return trainerRepo.findByActiveTrue();
     }
 
-    // 2. Get Trainer by Id
+    //Get Trainer by Id
     public Trainer getTrainerById(Long id) {
         return trainerRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
     }
 
-    //3. Create new Trainer or Add new Trainer
+    //Create new Trainer or Add new Trainer
     public Trainer createTrainer(Map<String, Object> data) {
         String name = (String) data.get("trainerName");
         String email = (String) data.get("email");
@@ -48,7 +53,10 @@ public class TrainerService {
 
         AppUser user = new AppUser();
         user.setEmail(email);
-        user.setPassword(password);
+
+        //ENCODING PASSWORD HERE
+        user.setPassword(passwordEncoder.encode(password));
+
         user.setRole(Role.TRAINER);
         AppUser savedUser = userRepo.save(user);
 
@@ -120,15 +128,12 @@ public class TrainerService {
 
     //Get Clients for the Logged-in Trainer
     public List<Member> getMyClients(String email) {
-        // 1. Find User by Email (from Login Token)
         AppUser user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // 2. Find Trainer Profile linked to this User
         Trainer trainer = trainerRepo.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer profile not found"));
 
-        // 3. Return their Students
         return trainer.getMembers();
     }
 }

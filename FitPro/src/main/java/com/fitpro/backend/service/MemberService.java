@@ -5,6 +5,7 @@ import com.fitpro.backend.entity.*;
 import com.fitpro.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,35 +28,41 @@ public class MemberService {
     @Autowired
     private TrainerRepository trainerRepo;
 
+    //Inject Password Encoder
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Transactional
     public Member registerMember(MemberRegistrationRequest request) {
-        // 1. Prevent Duplicate Emails
+        //Prevent Duplicate Emails
         if (userRepo.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered!");
         }
 
-        // 2. Create Login Account
+        //Create Login Account
         AppUser user = new AppUser();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+
+        //ENCODING PASSWORD
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         user.setRole(Role.MEMBER);
 
         user = userRepo.save(user);
 
-        // 3. Fetch Plan
+        //Fetch Plan
         MembershipPlan plan = planRepo.findById(request.getPlanId())
                 .orElseThrow(() -> new RuntimeException("Plan not found"));
 
-        // 4. Create Member Profile
+        //Create Member Profile
         Member member = new Member();
         member.setName(request.getName());
         member.setPhone(request.getPhone());
         member.setAddress(request.getAddress());
         member.setUser(user);
         member.setMembershipPlan(plan);
-        // Default active = true is set in Entity, but good to know
 
-        // 5. Link Trainer
+        //Link Trainer
         if (request.getTrainerId() != null) {
             Trainer trainer = trainerRepo.findById(request.getTrainerId())
                     .orElseThrow(() -> new RuntimeException("Trainer not found"));
@@ -65,32 +72,27 @@ public class MemberService {
         return memberRepo.save(member);
     }
 
-    // 1. READ ALL (Active Only) - 👇 UPDATED
+    //READ ALL (Active Only)
     public List<Member> getAllMembers() {
         return memberRepo.findByActiveTrue();
     }
 
-    // 2. READ ONE
+    //READ ONE
     public Member getMemberById(Long id) {
         return memberRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with ID: " + id));
     }
 
-    // 3. SOFT DELETE (Mark as Inactive) - 👇 UPDATED
+    //SOFT DELETE (Mark as Inactive)
     @Transactional
     public void deleteMember(Long id) {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found with ID: " + id));
-
-        // We DO NOT delete payments or attendance anymore. We keep the history!
-
-        // Just flip the switch
         member.setActive(false);
-
         memberRepo.save(member);
     }
 
-    // 4. UPDATE (PUT - Admin updates Member)
+    //UPDATE (PUT - Admin updates Member)
     public Member updateMember(Long id, Member memberDetails) {
         Member member = getMemberById(id);
 
