@@ -71,17 +71,46 @@ razorpay.api.secret=YOUR_SECRET_WHATEVER_SECRET_IS
 
 
 
-Frontend Configuration
+### Frontend Configuration
 
-Ensure Axios base URL matches backend:
+#### 1. Set API Base URL
 
-http://localhost:8080/api
+Update the Axios configuration file:
 
+```js
+// frontend/src/api/axios.js
+import axios from "axios";
 
-To Run the frontend:
+const api = axios.create({
+  baseURL: "http://localhost:8080/api",
+});
+
+export default api;
+
+2. Install Dependencies
+
+Navigate to the frontend directory and install required packages:
 
 npm install
+
+3. Start Development Server
+
+Run the application locally:
+
 npm run dev
+
+4. Environment Variables (Optional – Recommended)
+
+For better environment management, you can use a .env file:
+
+VITE_API_BASE_URL=http://localhost:8080/api
+
+
+Then update Axios to use it:
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
 
 
 
