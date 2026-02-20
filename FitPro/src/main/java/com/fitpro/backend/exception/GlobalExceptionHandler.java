@@ -15,13 +15,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleStatusException(ResponseStatusException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
 
-        // 1. The Status Code (e.g., 404 NOT_FOUND)
+       
         errorResponse.put("status", ex.getStatusCode().value());
 
-        // 2. The Custom Message (e.g., "Member not found with ID: 999")
+       
         errorResponse.put("message", ex.getReason());
 
-        // 3. Timestamp (Optional, looks professional)
+        
         errorResponse.put("timestamp", System.currentTimeMillis());
 
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());

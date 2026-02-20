@@ -1,13 +1,7 @@
 package com.fitpro.backend;
 
-import com.fitpro.backend.entity.AppUser;
-import com.fitpro.backend.repository.AppUserRepository;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import java.util.List;
 
 @SpringBootApplication
 public class FitproApplication {

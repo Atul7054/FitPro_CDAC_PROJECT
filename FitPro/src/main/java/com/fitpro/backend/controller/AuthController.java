@@ -30,7 +30,7 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    // Existing Login
+    
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try {
@@ -56,14 +56,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // Existing Register
+    
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthenticationRequest request) {
         authService.register(request.getEmail(), request.getPassword(), "MEMBER");
         return ResponseEntity.ok("User registered successfully");
     }
 
-    //Forgot Password Endpoint
+    
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
         try {
@@ -74,7 +74,7 @@ public class AuthController {
         }
     }
 
-    //Reset Password Endpoint
+    
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
         try {
@@ -88,7 +88,7 @@ public class AuthController {
     }
 }
 
-// Helper Class
+
 class AuthenticationRequest {
     private String email;
     private String password;

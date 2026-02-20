@@ -31,9 +31,9 @@ public class PaymentController {
     private String apiSecret;
 
 
-    // EXISTING METHODS (Manual Cash Payments)
+    
 
-    //ADMIN RECORDS PAYMENT (Manual)
+    //ADMIN RECORDS PAYMENT 
     @PostMapping
     public Payment recordPayment(@RequestParam Long memberId,
                                  @RequestParam Double amount,
@@ -48,10 +48,9 @@ public class PaymentController {
     }
 
 
-    //RAZORPAY METHODS (Online Payments)
+    //RAZORPAY METHODS
 
-
-    //CREATE RAZORPAY ORDER (Frontend calls this before opening popup)
+    //CREATE RAZORPAY ORDER 
     @PostMapping("/create-order")
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) {
         try {
@@ -75,7 +74,7 @@ public class PaymentController {
         }
     }
 
-    //VERIFY PAYMENT (Called after user pays successfully)
+    //VERIFY PAYMENT 
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPayment(@RequestBody Map<String, Object> data) {
         try {
@@ -83,7 +82,7 @@ public class PaymentController {
             String paymentId = (String) data.get("razorpay_payment_id");
             String signature = (String) data.get("razorpay_signature");
 
-            // Get Member ID and Amount to save to DB
+            
             Long memberId = Long.parseLong(data.get("memberId").toString());
             Double amount = Double.parseDouble(data.get("amount").toString());
 

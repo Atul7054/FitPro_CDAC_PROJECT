@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*") // Ensure React can access this
+@CrossOrigin(origins = "*") 
 public class AdminController {
 
     @Autowired
@@ -24,11 +24,11 @@ public class AdminController {
     @Autowired
     private TrainerService trainerService;
 
-    // 👇 Inject the Payment Repo so we can count the money
+    
     @Autowired
     private PaymentRepository paymentRepository;
 
-    // --- DASHBOARD STATS ---
+    
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
         Map<String, Object> stats = new HashMap<>();
@@ -36,7 +36,7 @@ public class AdminController {
         long totalMembers = memberService.getAllMembers().size();
         long activeTrainers = trainerService.getAllTrainers().size();
 
-        //Ask the database for the sum of actual payments
+        
         double totalRevenue = paymentRepository.calculateTotalRevenue();
 
         stats.put("totalMembers", totalMembers);
@@ -46,7 +46,7 @@ public class AdminController {
         return ResponseEntity.ok(stats);
     }
 
-    // --- MEMBER MANAGEMENT ---
+    
     @GetMapping("/members")
     public List<Member> getAllMembers() {
         return memberService.getAllMembers();
@@ -63,7 +63,7 @@ public class AdminController {
         return ResponseEntity.ok(memberService.updateMember(id, member));
     }
 
-    // --- TRAINER MANAGEMENT ---
+    
     @GetMapping("/trainers")
     public List<Trainer> getAllTrainers() {
         return trainerService.getAllTrainers();
@@ -75,7 +75,7 @@ public class AdminController {
         return ResponseEntity.ok("Trainer deleted successfully");
     }
 
-    //Update Trainer (Fixes the error!)
+    
     @PutMapping("/trainers/{id}")
     public ResponseEntity<Trainer> updateTrainer(@PathVariable Long id, @RequestBody Trainer trainer) {
         return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));

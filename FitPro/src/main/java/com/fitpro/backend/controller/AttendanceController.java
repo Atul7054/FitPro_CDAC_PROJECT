@@ -19,14 +19,14 @@ public class AttendanceController {
     @Autowired
     private AttendanceRepository attendanceRepo;
 
-    // 1. MARK ATTENDANCE (Admin)
+   
     @PostMapping
     public Attendance markAttendance(@RequestParam Long memberId,
                                      @RequestParam String status) {
         return attendanceService.markAttendance(memberId, status);
     }
 
-    // 2. VIEW HISTORY (Member)
+    
     @GetMapping("/member/{memberId}")
     public List<Attendance> getMemberAttendance(@PathVariable Long memberId) {
         return attendanceRepo.findByMemberId(memberId);

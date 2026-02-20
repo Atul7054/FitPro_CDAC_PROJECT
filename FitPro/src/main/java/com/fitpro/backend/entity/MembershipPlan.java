@@ -11,9 +11,8 @@ public class MembershipPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String planName; // e.g., "Gold", "Silver"
+    private String planName; 
 
-    private Double price;    // e.g., 5000.00
-
-    private Integer durationInDays; // e.g., 30, 365
+    private Double price;    
+    private Integer durationInDays; 
 }

@@ -22,20 +22,19 @@ public class UserController {
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
-        // 1. Get currently logged-in user's email
+        
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // 2. Find User
+        
         AppUser user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Verify Old Password
-        // Note: matches(raw, encoded) works even if you are using NoOp (Plain text) for now.
+        
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Incorrect old password");
         }
 
-        // 4. Update & Save New Password
+       
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepo.save(user);
 
