@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Entity
 @Data
 public class Member {
-    // ... existing fields ...
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,7 +20,7 @@ public class Member {
     private LocalDate endDate;
 
 
-    private boolean active = true; // Default is ACTIVE cuz they joined and if paid
+    private boolean active = true; 
 
     @ManyToOne
     @JoinColumn(name = "user_id")

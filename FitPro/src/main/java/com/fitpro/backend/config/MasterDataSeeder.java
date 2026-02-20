@@ -18,7 +18,7 @@ public class MasterDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 1. Seed Membership Plans
+        
         if (planRepo.count() == 0) {
             MembershipPlan gold = new MembershipPlan();
             gold.setPlanName("Gold Plan");
@@ -35,16 +35,16 @@ public class MasterDataSeeder implements CommandLineRunner {
             System.out.println(">>> PLANS SEEDED <<<");
         }
 
-        // 2. Seed Trainers (Requires creating a User first!)
+        
         if (trainerRepo.count() == 0) {
-            // Create Login for Trainer
+           
             AppUser trainerUser = new AppUser();
             trainerUser.setEmail("trainer@fitpro.com");
             trainerUser.setPassword("trainer123");
             trainerUser.setRole(Role.TRAINER);
             userRepo.save(trainerUser);
 
-            // Create Profile
+           
             Trainer t = new Trainer();
             t.setTrainerName("John Cena");
             t.setSpecialization("Weight Lifting");

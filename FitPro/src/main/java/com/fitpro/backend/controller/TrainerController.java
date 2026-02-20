@@ -19,10 +19,10 @@ public class TrainerController {
     @Autowired
     private TrainerService trainerService;
 
-    //Get Clients for the Logged-in Trainer
+    
     @GetMapping("/dashboard/clients")
     public ResponseEntity<List<Member>> getMyClients(Principal principal) {
-        // Principal holds the email of the person who is currently logged in
+        
         List<Member> clients = trainerService.getMyClients(principal.getName());
         return ResponseEntity.ok(clients);
     }
@@ -51,7 +51,7 @@ public class TrainerController {
         return trainerService.patchTrainer(id, updates);
     }
 
-    //POST (Create New Trainer)
+    //POST 
     @PostMapping
     public Trainer createTrainer(@RequestBody Map<String, Object> trainerData) {
         return trainerService.createTrainer(trainerData);

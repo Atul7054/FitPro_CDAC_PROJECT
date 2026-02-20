@@ -12,7 +12,7 @@ public class Payment {
     private Long id;
 
     private Double amount;
-    private String paymentMethod; // e.g., "Cash", "UPI"
+    private String paymentMethod; 
     private LocalDate paymentDate;
     
     @ManyToOne
